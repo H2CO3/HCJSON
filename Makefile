@@ -1,22 +1,23 @@
-TARGET = CarbonateJSON
+TARGET = HCJSON
 
 CC = gcc
 LD = $(CC)
 CFLAGS = -isysroot /User/sysroot \
-	 -std=gnu99 \
 	 -Wall \
 	 -I. \
 	 -I.. \
-	 -c
+	 -c \
+	 -ffunction-sections -fdata-sections
 LDFLAGS = -isysroot /User/sysroot \
 	  -w \
 	  -dynamiclib \
+	  -fObjC \
 	  -install_name /System/Library/Frameworks/$(TARGET).framework/$(TARGET) \
 	  -lobjc \
 	  -ljsonz \
 	  -framework Foundation
 
-OBJECTS = NSArray+CarbonateJSON.o NSDictionary+CarbonateJSON.o NSString+CarbonateJSON.o CJFunctions.o
+OBJECTS = NSArray+HCJSON.o NSDictionary+HCJSON.o NSString+HCJSON.o HCJFunctions.o
 
 all: $(TARGET)
 	sudo cp $(TARGET) /System/Library/Frameworks/$(TARGET).framework/
@@ -25,6 +26,11 @@ all: $(TARGET)
 $(TARGET): $(OBJECTS)
 	$(LD) $(LDFLAGS) -o $(TARGET) $(OBJECTS)
 
+static: $(OBJECTS)
+	ar rcsv HCJSON.a $^
+
+clean:
+	rm *.o
+
 %.o: %.m
 	$(CC) $(CFLAGS) -o $@ $^
-

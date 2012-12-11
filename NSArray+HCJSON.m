@@ -1,29 +1,30 @@
-//
-// NSDictionary+CarbonateJSON.h
-// CarbonateJSON
-// 
-// Created by Árpád Goretity on 02/12/2011.
-// Licensed under a CreativeCommons Attribution 3.0 Unported License
-//
+/*
+ * NSArray+CarbonateJSON.h
+ * CarbonateJSON
+ * 
+ * Created by Árpád Goretity on 02/12/2011.
+ * Licensed under a CreativeCommons Attribution 3.0 Unported License
+ */
 
 #import <string.h>
-#import "NSDictionary+CarbonateJSON.h"
-#import "NSArray+CarbonateJSON.h"
+#import "NSArray+HCJSON.h"
+#import "NSDictionary+HCJSON.h"
 
+@implementation NSArray (HCJSON)
 
-@implementation NSDictionary (CarbonateJSON)
-
-- (NSString *) generateJson {
-	NSMutableString *json = [NSMutableString string];
-	[json appendString:@"{"];
+- (NSString *)serializeJSON
+{
+	NSMutableString *json = [[NSMutableString alloc] initWithString:@"["];
 	int count = [self count];
-	for (int i = 0; i < count; i++) {
+	int i;
+
+	for (i = 0; i < count; i++) {
 		if (i > 0) {
 			[json appendString:@", "];
 		}
-		NSString *key = [[self allKeys] objectAtIndex:i];
-		NSObject *obj = [self objectForKey:key];
-		[json appendFormat:@"\"%@\": ", key];
+		
+		id obj = [self objectAtIndex:i];
+		
 		if ([obj isKindOfClass:[NSString class]]) {
 			[json appendFormat:@"\"%@\"", obj];
 		} else if ([obj isKindOfClass:[NSDate class]]) {
@@ -42,23 +43,24 @@
 			} else if (strcmp([(NSNumber *)obj objCType], @encode(long int)) == 0) {
 				[json appendFormat:@"%ld", [(NSNumber *)obj longValue]];
 			} else {
-				// default to long signed integer
+				// default to int
 				[json appendFormat:@"%d", [(NSNumber *)obj intValue]];
 			}
 		} else if ([obj isKindOfClass:[NSNull class]]) {
 			[json appendString:@"null"];
 		} else if ([obj isKindOfClass:[NSArray class]]) {
-			[json appendString:[(NSArray *)obj generateJson]];
+			[json appendString:[(NSArray *)obj serializeJSON]];
 		} else if ([obj isKindOfClass:[NSDictionary class]]) {
-			[json appendString:[(NSDictionary *)obj generateJson]];
+			[json appendString:[(NSDictionary *)obj serializeJSON]];
 		} else {
 			// no other objects allowed
-			return NULL;
+			[json release];
+			return nil;
 		}
 	}
-	[json appendString:@"}"];
-	return json;
+	
+	[json appendString:@"]"];
+	return [json autorelease];
 }
 
 @end
-

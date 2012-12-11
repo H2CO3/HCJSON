@@ -1,27 +1,32 @@
-//
-// NSArray+CarbonateJSON.h
-// CarbonateJSON
-// 
-// Created by Árpád Goretity on 02/12/2011.
-// Licensed under a CreativeCommons Attribution 3.0 Unported License
-//
+/*
+ * NSDictionary+HCJSON.h
+ * HCJSON
+ * 
+ * Created by Árpád Goretity on 02/12/2011.
+ * Licensed under a CreativeCommons Attribution 3.0 Unported License
+ */
 
 #import <string.h>
-#import "NSArray+CarbonateJSON.h"
-#import "NSDictionary+CarbonateJSON.h"
+#import "NSDictionary+HCJSON.h"
+#import "NSArray+HCJSON.h"
 
+@implementation NSDictionary (HCJSON)
 
-@implementation NSArray (CarbonateJSON)
-
-- (NSString *) generateJson {
-	NSMutableString *json = [NSMutableString string];
-	[json appendString:@"["];
+- (NSString *)serializeJSON
+{
+	NSMutableString *json = [[NSMutableString alloc] initWithString:@"{"];
 	int count = [self count];
-	for (int i = 0; i < count; i++) {
+	int i;
+	
+	for (i = 0; i < count; i++) {
 		if (i > 0) {
 			[json appendString:@", "];
 		}
-		NSObject *obj = [self objectAtIndex:i];
+		
+		NSString *key = [[self allKeys] objectAtIndex:i];
+		id obj = [self objectForKey:key];
+		[json appendFormat:@"\"%@\": ", key];
+
 		if ([obj isKindOfClass:[NSString class]]) {
 			[json appendFormat:@"\"%@\"", obj];
 		} else if ([obj isKindOfClass:[NSDate class]]) {
@@ -40,23 +45,24 @@
 			} else if (strcmp([(NSNumber *)obj objCType], @encode(long int)) == 0) {
 				[json appendFormat:@"%ld", [(NSNumber *)obj longValue]];
 			} else {
-				// default to long signed integer
+				// default to int
 				[json appendFormat:@"%d", [(NSNumber *)obj intValue]];
 			}
 		} else if ([obj isKindOfClass:[NSNull class]]) {
 			[json appendString:@"null"];
 		} else if ([obj isKindOfClass:[NSArray class]]) {
-			[json appendString:[(NSArray *)obj generateJson]];
+			[json appendString:[(NSArray *)obj serializeJSON]];
 		} else if ([obj isKindOfClass:[NSDictionary class]]) {
-			[json appendString:[(NSDictionary *)obj generateJson]];
+			[json appendString:[(NSDictionary *)obj serializeJSON]];
 		} else {
 			// no other objects allowed
-			return NULL;
+			[json release];
+			return nil;
 		}
 	}
-	[json appendString:@"]"];
-	return json;
+	
+	[json appendString:@"}"];
+	return [json autorelease];
 }
 
 @end
-
